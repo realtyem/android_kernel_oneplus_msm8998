@@ -163,7 +163,7 @@ static inline int is_extension_exist(const unsigned char *s, const char *sub)
 			return 1;
 	}
 
-	return 0;
+		return 0;
 }
 
 /*
@@ -183,7 +183,7 @@ static inline void set_file_temperature(struct f2fs_sb_info *sbi, struct inode *
 	for (i = 0; i < cold_count + hot_count; i++) {
 		if (is_extension_exist(name, extlist[i]))
 			break;
-	}
+		}
 
 	up_read(&sbi->sb_lock);
 
@@ -194,7 +194,7 @@ static inline void set_file_temperature(struct f2fs_sb_info *sbi, struct inode *
 		file_set_cold(inode);
 	else
 		file_set_hot(inode);
-}
+	}
 
 int f2fs_update_extension_list(struct f2fs_sb_info *sbi, const char *name,
 							bool hot, bool set)
@@ -597,8 +597,8 @@ static int f2fs_symlink(struct inode *dir, struct dentry *dentry,
 	f2fs_alloc_nid_done(sbi, inode->i_ino);
 
 	err = fscrypt_encrypt_symlink(inode, symname, len, &disk_link);
-	if (err)
-		goto err_out;
+		if (err)
+			goto err_out;
 
 	err = page_symlink(inode, disk_link.name, disk_link.len);
 
@@ -854,7 +854,7 @@ static int f2fs_rename(struct inode *old_dir, struct dentry *old_dentry,
 	if (new_inode) {
 		err = dquot_initialize(new_inode);
 		if (err)
-			goto out;
+		goto out;
 	}
 
 	err = -ENOENT;
@@ -871,7 +871,7 @@ static int f2fs_rename(struct inode *old_dir, struct dentry *old_dentry,
 			if (IS_ERR(old_dir_page))
 				err = PTR_ERR(old_dir_page);
 			goto out_old;
-		}
+	}
 	}
 
 	if (flags & RENAME_WHITEOUT) {
@@ -955,7 +955,7 @@ static int f2fs_rename(struct inode *old_dir, struct dentry *old_dentry,
 
 	down_write(&F2FS_I(old_inode)->i_sem);
 	if (!old_dir_entry || whiteout)
-		file_lost_pino(old_inode);
+	file_lost_pino(old_inode);
 	else
 		F2FS_I(old_inode)->i_pino = new_dir->i_ino;
 	up_write(&F2FS_I(old_inode)->i_sem);
@@ -982,7 +982,7 @@ static int f2fs_rename(struct inode *old_dir, struct dentry *old_dentry,
 		else
 			f2fs_put_page(old_dir_page, 0);
 		f2fs_i_links_write(old_dir, false);
-	}
+		}
 	if (F2FS_OPTION(sbi).fsync_mode == FSYNC_MODE_STRICT) {
 		f2fs_add_ino_entry(sbi, new_dir->i_ino, TRANS_DIR_INO);
 		if (S_ISDIR(old_inode->i_mode))
@@ -1073,7 +1073,7 @@ static int f2fs_cross_rename(struct inode *old_dir, struct dentry *old_dentry,
 				if (IS_ERR(old_dir_page))
 					err = PTR_ERR(old_dir_page);
 				goto out_new;
-			}
+		}
 		}
 
 		if (S_ISDIR(new_inode->i_mode)) {
@@ -1083,8 +1083,8 @@ static int f2fs_cross_rename(struct inode *old_dir, struct dentry *old_dentry,
 				if (IS_ERR(new_dir_page))
 					err = PTR_ERR(new_dir_page);
 				goto out_old_dir;
-			}
 		}
+	}
 	}
 
 	/*
