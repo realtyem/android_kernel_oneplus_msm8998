@@ -817,6 +817,11 @@ static inline u64 get_group_idle(struct cfq_data *cfqd)
 	return cfq_group_idle;
 }
 
+static inline u64 get_group_idle(struct cfq_data *cfqd)
+{
+	return cfq_group_idle;
+}
+
 #endif	/* CONFIG_CFQ_GROUP_IOSCHED */
 
 #define cfq_log(cfqd, fmt, args...)	\
