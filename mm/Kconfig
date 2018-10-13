@@ -744,6 +744,10 @@ config PROCESS_RECLAIM
 
 	 Any other vaule is ignored.
 
+config VMSTAT_INTERVAL
+	int "Default interval in seconds to update vmstat"
+	default 1
+
 config VM_MAX_READAHEAD
 	int "default max readahead window size"
 	default 128
