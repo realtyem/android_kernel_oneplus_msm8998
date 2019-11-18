@@ -1,4 +1,4 @@
-/* Copyright (c) 2012-2019, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2012-2017, 2019 The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -584,7 +584,7 @@ static int32_t afe_callback(struct apr_client_data *data, void *priv)
 		ret = afe_lpass_resources_callback(data);
 		atomic_set(&this_afe.state, 0);
 		if (afe_token_is_valid(data->token))
-			wake_up(&this_afe.wait[data->token]);
+		wake_up(&this_afe.wait[data->token]);
 		else
 			return -EINVAL;
 		if (!ret) {
@@ -623,7 +623,7 @@ static int32_t afe_callback(struct apr_client_data *data, void *priv)
 			case AFE_CMD_REQUEST_LPASS_RESOURCES:
 				atomic_set(&this_afe.state, 0);
 				if (afe_token_is_valid(data->token))
-					wake_up(&this_afe.wait[data->token]);
+				wake_up(&this_afe.wait[data->token]);
 				else
 					return -EINVAL;
 				break;
@@ -638,7 +638,7 @@ static int32_t afe_callback(struct apr_client_data *data, void *priv)
 			case AFE_CMD_ADD_TOPOLOGIES:
 				atomic_set(&this_afe.state, 0);
 				if (afe_token_is_valid(data->token))
-					wake_up(&this_afe.wait[data->token]);
+				wake_up(&this_afe.wait[data->token]);
 				else
 					return -EINVAL;
 				pr_debug("%s: AFE_CMD_ADD_TOPOLOGIES cmd 0x%x\n",
@@ -697,7 +697,7 @@ static int32_t afe_callback(struct apr_client_data *data, void *priv)
 				this_afe.mmap_handle = payload[0];
 			atomic_set(&this_afe.state, 0);
 			if (afe_token_is_valid(data->token))
-				wake_up(&this_afe.wait[data->token]);
+			wake_up(&this_afe.wait[data->token]);
 			else
 				return -EINVAL;
 		} else if (data->opcode == AFE_EVENT_RT_PROXY_PORT_STATUS) {
