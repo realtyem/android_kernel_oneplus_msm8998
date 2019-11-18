@@ -35,3 +35,37 @@ config ZRAM_MEMORY_TRACKING
 	  /sys/kernel/debug/zram/zramX/block_state.
 
 	  See Documentation/blockdev/zram.txt for more information.
+
+choice
+	prompt "Choose Default Zram Compressor"
+	depends on ZRAM
+	default DEFAULT_ZRAM_COMPRESSOR_LZO
+	help
+	  Choose from the available compressors to use as a compression 
+	  algorithm for Zram Device.
+
+	config DEFAULT_ZRAM_COMPRESSOR_LZO
+		bool "LZO (default)" if CRYPTO_LZO=y
+
+	config DEFAULT_ZRAM_COMPRESSOR_ZLIB
+		bool "ZLIB" if CRYPTO_ZLIB=y
+
+	config DEFAULT_ZRAM_COMPRESSOR_DEFLATE
+		bool "Deflate" if CRYPTO_DEFLATE=y
+
+	config DEFAULT_ZRAM_COMPRESSOR_LZ4
+		bool "LZ4" if CRYPTO_LZ4=y
+
+	config DEFAULT_ZRAM_COMPRESSOR_ZSTD
+		bool "ZSTD" if CRYPTO_ZSTD=y
+
+endchoice
+
+config DEFAULT_ZRAM_COMPRESSOR
+	string
+	default "lzo" if DEFAULT_ZRAM_COMPRESSOR_LZO
+	default "zlib" if DEFAULT_ZRAM_COMPRESSOR_ZLIB
+	default "deflate" if DEFAULT_ZRAM_COMPRESSOR_DEFLATE
+	default "lz4" if DEFAULT_ZRAM_COMPRESSOR_LZ4
+	default "zstd" if DEFAULT_ZRAM_COMPRESSOR_ZSTD
+	default "lzo"
