@@ -145,27 +145,7 @@ static unsigned int dev_num = 1;
 static struct cdev wlan_hdd_state_cdev;
 static struct class *class;
 static dev_t device;
-#ifndef MODULE
-static struct gwlan_loader *wlan_loader;
-static ssize_t wlan_boot_cb(struct kobject *kobj,
-			    struct kobj_attribute *attr,
-			    const char *buf, size_t count);
-struct gwlan_loader {
-	bool loaded_state;
-	struct kobject *boot_wlan_obj;
-	struct attribute_group *attr_group;
-};
-
-static struct kobj_attribute wlan_boot_attribute =
-	__ATTR(boot_wlan, 0220, NULL, wlan_boot_cb);
-
-static struct attribute *attrs[] = {
-	&wlan_boot_attribute.attr,
-	NULL,
-};
-
-#define MODULE_INITIALIZED 1
-#endif
+static bool hdd_loaded = false;
 
 #define HDD_OPS_INACTIVITY_TIMEOUT (120000)
 #define MAX_OPS_NAME_STRING_SIZE 20
@@ -5014,6 +4994,11 @@ QDF_STATUS hdd_stop_adapter(hdd_context_t *hdd_ctx, hdd_adapter_t *adapter,
 			cds_flush_delayed_work(&adapter->acs_pending_work);
 			clear_bit(ACS_PENDING, &adapter->event_flags);
 		}
+
+		/* Diassociate with all the peers before stop ap post */
+		if (test_bit(SOFTAP_BSS_STARTED, &adapter->event_flags))
+			wlan_hdd_del_station(adapter);
+
 		hdd_ipa_flush(hdd_ctx);
 
 	case QDF_P2P_GO_MODE:
@@ -8065,111 +8050,6 @@ static void hdd_set_thermal_level_cb(void *context, u_int8_t level)
 }
 
 /**
- * hdd_get_safe_channel_from_pcl_and_acs_range() - Get safe channel for SAP
- * restart
- * @adapter: AP adapter, which should be checked for NULL
- *
- * Get a safe channel to restart SAP. PCL already takes into account the
- * unsafe channels. So, the PCL is validated with the ACS range to provide
- * a safe channel for the SAP to restart.
- *
- * Return: Channel number to restart SAP in case of success. In case of any
- * failure, the channel number returned is zero.
- */
-static uint8_t hdd_get_safe_channel_from_pcl_and_acs_range(
-				hdd_adapter_t *adapter)
-{
-	struct sir_pcl_list pcl;
-	QDF_STATUS status;
-	uint32_t i, j;
-	tHalHandle *hal_handle;
-	hdd_context_t *hdd_ctx;
-	bool found = false;
-
-	hdd_ctx = WLAN_HDD_GET_CTX(adapter);
-	if (!hdd_ctx) {
-		hdd_err("invalid HDD context");
-		return INVALID_CHANNEL_ID;
-	}
-
-	hal_handle = WLAN_HDD_GET_HAL_CTX(adapter);
-	if (!hal_handle) {
-		hdd_err("invalid HAL handle");
-		return INVALID_CHANNEL_ID;
-	}
-
-	status = cds_get_pcl_for_existing_conn(CDS_SAP_MODE,
-			pcl.pcl_list, &pcl.pcl_len,
-			pcl.weight_list, QDF_ARRAY_SIZE(pcl.weight_list),
-			false);
-	if (QDF_IS_STATUS_ERROR(status)) {
-		hdd_err("Get PCL failed");
-		return INVALID_CHANNEL_ID;
-	}
-
-	/*
-	 * In some scenarios, like hw dbs disabled, sap+sap case, if operating
-	 * channel is unsafe channel, the pcl may be empty, instead of return,
-	 * try to choose a safe channel from acs range.
-	 */
-	if (!pcl.pcl_len)
-		hdd_debug("pcl length is zero!");
-
-	hdd_debug("start:%d end:%d",
-		adapter->sessionCtx.ap.sapConfig.acs_cfg.start_ch,
-		adapter->sessionCtx.ap.sapConfig.acs_cfg.end_ch);
-
-	/* PCL already takes unsafe channel into account */
-	for (i = 0; i < pcl.pcl_len; i++) {
-		hdd_debug("chan[%d]:%d", i, pcl.pcl_list[i]);
-		if ((pcl.pcl_list[i] >=
-		   adapter->sessionCtx.ap.sapConfig.acs_cfg.start_ch) &&
-		   (pcl.pcl_list[i] <=
-		   adapter->sessionCtx.ap.sapConfig.acs_cfg.end_ch)) {
-			hdd_debug("found PCL safe chan:%d", pcl.pcl_list[i]);
-			return pcl.pcl_list[i];
-		}
-	}
-
-	hdd_debug("no safe channel from PCL found in ACS range");
-
-	/* Try for safe channel from all valid channel */
-	pcl.pcl_len = MAX_NUM_CHAN;
-	status = sme_get_cfg_valid_channels(hal_handle, pcl.pcl_list,
-					&pcl.pcl_len);
-	if (QDF_IS_STATUS_ERROR(status)) {
-		hdd_err("error in getting valid channel list");
-		return INVALID_CHANNEL_ID;
-	}
-
-	for (i = 0; i < pcl.pcl_len; i++) {
-		hdd_debug("chan[%d]:%d", i, pcl.pcl_list[i]);
-		found = false;
-		for (j = 0; j < hdd_ctx->unsafe_channel_count; j++) {
-			if (pcl.pcl_list[i] ==
-					hdd_ctx->unsafe_channel_list[j]) {
-				hdd_debug("unsafe chan:%d", pcl.pcl_list[i]);
-				found = true;
-				break;
-			}
-		}
-
-		if (found)
-			continue;
-
-		if ((pcl.pcl_list[i] >=
-		   adapter->sessionCtx.ap.sapConfig.acs_cfg.start_ch) &&
-		   (pcl.pcl_list[i] <=
-		   adapter->sessionCtx.ap.sapConfig.acs_cfg.end_ch)) {
-			hdd_debug("found safe chan:%d", pcl.pcl_list[i]);
-			return pcl.pcl_list[i];
-		}
-	}
-
-	return INVALID_CHANNEL_ID;
-}
-
-/**
  * hdd_restart_sap() - Restarts SAP on the given channel
  * @adapter: AP adapter
  * @channel: Channel
@@ -8325,8 +8205,8 @@ void hdd_unsafe_channel_restart_sap(hdd_context_t *hdd_ctxt)
 		}
 
 		restart_chan =
-			hdd_get_safe_channel_from_pcl_and_acs_range(
-					adapter_temp);
+			wlansap_get_safe_channel_from_pcl_and_acs_range(
+					adapter_temp->sessionCtx.ap.sapContext);
 		if (!restart_chan) {
 			hdd_err("fail to restart SAP");
 		} else {
@@ -8866,6 +8746,19 @@ list_destroy:
 	return ret;
 }
 
+/*
+ * enum hdd_block_shutdown - Control if driver allows modem shutdown
+ * @HDD_UNBLOCK_MODEM_SHUTDOWN: Unblock shutdown
+ * @HDD_BLOCK_MODEM_SHUTDOWN: Block shutdown
+ *
+ * On calling pld_block_shutdown API with the given values, modem
+ * graceful shutdown is blocked/unblocked.
+ */
+enum hdd_block_shutdown {
+	HDD_UNBLOCK_MODEM_SHUTDOWN,
+	HDD_BLOCK_MODEM_SHUTDOWN,
+};
+
 /**
  * ie_whitelist_attrs_init() - initialize ie whitelisting attributes
  * @hdd_ctx: pointer to hdd context
@@ -8919,9 +8812,15 @@ static void hdd_iface_change_callback(void *priv)
 
 	ENTER();
 	hdd_debug("Interface change timer expired close the modules!");
+
+	/* Block the modem graceful shutdown till stop modules is completed */
+	pld_block_shutdown(hdd_ctx->parent_dev, HDD_BLOCK_MODEM_SHUTDOWN);
+
 	ret = hdd_wlan_stop_modules(hdd_ctx, false);
 	if (ret)
 		hdd_err("Failed to stop modules");
+
+	pld_block_shutdown(hdd_ctx->parent_dev, HDD_UNBLOCK_MODEM_SHUTDOWN);
 	EXIT();
 }
 
@@ -12489,6 +12388,7 @@ static int wlan_hdd_state_ctrl_param_open(struct inode *inode,
 	return 0;
 }
 
+static int __hdd_module_init(void);
 static ssize_t wlan_hdd_state_ctrl_param_write(struct file *filp,
 						const char __user *user_buf,
 						size_t count,
@@ -12517,6 +12417,13 @@ static ssize_t wlan_hdd_state_ctrl_param_write(struct file *filp,
 	if (strncmp(buf, wlan_on_str, strlen(wlan_on_str)) != 0) {
 		pr_err("Invalid value received from framework");
 		goto exit;
+	}
+
+	if (!hdd_loaded) {
+		if (__hdd_module_init()) {
+			pr_err("%s: Failed to init hdd module\n", __func__);
+			goto exit;
+		}
 	}
 
 	if (!cds_is_driver_loaded()) {
@@ -12637,12 +12544,7 @@ static int __hdd_module_init(void)
 		goto out;
 	}
 
-	ret = wlan_hdd_state_ctrl_param_create();
-	if (ret) {
-		pr_err("wlan_hdd_state_create:%x\n", ret);
-		goto out;
-	}
-
+	hdd_loaded = true;
 	pr_info("%s: driver loaded\n", WLAN_MODULE_NAME);
 
 	return 0;
@@ -12684,135 +12586,6 @@ static void __hdd_module_exit(void)
 	wlan_hdd_state_ctrl_param_destroy();
 }
 
-#ifndef MODULE
-/**
- * wlan_boot_cb() - Wlan boot callback
- * @kobj:      object whose directory we're creating the link in.
- * @attr:      attribute the user is interacting with
- * @buff:      the buffer containing the user data
- * @count:     number of bytes in the buffer
- *
- * This callback is invoked when the fs is ready to start the
- * wlan driver initialization.
- *
- * Return: 'count' on success or a negative error code in case of failure
- */
-static ssize_t wlan_boot_cb(struct kobject *kobj,
-			    struct kobj_attribute *attr,
-			    const char *buf,
-			    size_t count)
-{
-
-	if (wlan_loader->loaded_state) {
-		pr_err("%s: wlan driver already initialized\n", __func__);
-		return -EALREADY;
-	}
-
-	if (__hdd_module_init()) {
-		pr_err("%s: wlan driver initialization failed\n", __func__);
-		return -EIO;
-	}
-
-	wlan_loader->loaded_state = MODULE_INITIALIZED;
-
-	return count;
-}
-
-/**
- * hdd_sysfs_cleanup() - cleanup sysfs
- *
- * Return: None
- *
- */
-static void hdd_sysfs_cleanup(void)
-{
-	/* remove from group */
-	if (wlan_loader->boot_wlan_obj && wlan_loader->attr_group)
-		sysfs_remove_group(wlan_loader->boot_wlan_obj,
-				   wlan_loader->attr_group);
-
-	/* unlink the object from parent */
-	kobject_del(wlan_loader->boot_wlan_obj);
-
-	/* free the object */
-	kobject_put(wlan_loader->boot_wlan_obj);
-
-	kfree(wlan_loader->attr_group);
-	kfree(wlan_loader);
-
-	wlan_loader = NULL;
-}
-
-/**
- * wlan_init_sysfs() - Creates the sysfs to be invoked when the fs is
- * ready
- *
- * This is creates the syfs entry boot_wlan. Which shall be invoked
- * when the filesystem is ready.
- *
- * QDF API cannot be used here since this function is called even before
- * initializing WLAN driver.
- *
- * Return: 0 for success, errno on failure
- */
-static int wlan_init_sysfs(void)
-{
-	int ret = -ENOMEM;
-
-	wlan_loader = kzalloc(sizeof(*wlan_loader), GFP_KERNEL);
-	if (!wlan_loader)
-		return -ENOMEM;
-
-	wlan_loader->boot_wlan_obj = NULL;
-	wlan_loader->attr_group = kzalloc(sizeof(*(wlan_loader->attr_group)),
-					  GFP_KERNEL);
-	if (!wlan_loader->attr_group)
-		goto error_return;
-
-	wlan_loader->loaded_state = 0;
-	wlan_loader->attr_group->attrs = attrs;
-
-	wlan_loader->boot_wlan_obj = kobject_create_and_add("boot_wlan",
-							    kernel_kobj);
-	if (!wlan_loader->boot_wlan_obj) {
-		pr_err("%s: sysfs create and add failed\n", __func__);
-		goto error_return;
-	}
-
-	ret = sysfs_create_group(wlan_loader->boot_wlan_obj,
-				 wlan_loader->attr_group);
-	if (ret) {
-		pr_err("%s: sysfs create group failed %d\n", __func__, ret);
-		goto error_return;
-	}
-
-	return 0;
-
-error_return:
-	hdd_sysfs_cleanup();
-
-	return ret;
-}
-
-/**
- * wlan_deinit_sysfs() - Removes the sysfs created to initialize the wlan
- *
- * Return: 0 on success or errno on failure
- */
-static int wlan_deinit_sysfs(void)
-{
-	if (!wlan_loader) {
-		hdd_err("wlan loader context is Null!");
-		return -EINVAL;
-	}
-
-	hdd_sysfs_cleanup();
-	return 0;
-}
-
-#endif /* MODULE */
-
-#ifdef MODULE
 /**
  * __hdd_module_init - Module init helper
  *
@@ -12822,28 +12595,15 @@ static int wlan_deinit_sysfs(void)
  */
 static int hdd_module_init(void)
 {
-	if (__hdd_module_init()) {
-		pr_err("%s: Failed to register handler\n", __func__);
-		return -EINVAL;
-	}
+	int ret;
 
-	return 0;
-}
-#else
-static int __init hdd_module_init(void)
-{
-	int ret = -EINVAL;
-
-	ret = wlan_init_sysfs();
+	ret = wlan_hdd_state_ctrl_param_create();
 	if (ret)
-		pr_err("Failed to create sysfs entry for loading wlan");
+		pr_err("wlan_hdd_state_create:%x\n", ret);
 
 	return ret;
 }
-#endif
 
-
-#ifdef MODULE
 /**
  * hdd_module_exit() - Exit function
  *
@@ -12855,13 +12615,6 @@ static void __exit hdd_module_exit(void)
 {
 	__hdd_module_exit();
 }
-#else
-static void __exit hdd_module_exit(void)
-{
-	__hdd_module_exit();
-	wlan_deinit_sysfs();
-}
-#endif
 
 static int fwpath_changed_handler(const char *kmessage,
 				  const struct kernel_param *kp)
@@ -13365,6 +13118,11 @@ void hdd_set_roaming_in_progress(bool value)
 
 	hdd_ctx->roaming_in_progress = value;
 	hdd_debug("Roaming in Progress set to %d", value);
+	if (!hdd_ctx->roaming_in_progress) {
+		/* Reset scan reject params on successful roam complete */
+		hdd_debug("Reset scan reject params");
+		hdd_init_scan_reject_params(hdd_ctx);
+	}
 }
 
 /**
@@ -13542,6 +13300,35 @@ void hdd_pld_ipa_uc_shutdown_pipes(void)
 
 	hdd_ipa_uc_force_pipe_shutdown(hdd_ctx);
 }
+
+#ifdef NTH_BEACON_OFFLOAD
+/**
+ * hdd_set_nth_beacon_offload() - Send the nth beacon offload command to FW
+ * @adapter: HDD adapter
+ * @value: Value of n, for which the nth beacon will be forwarded by the FW
+ *
+ * Return: QDF_STATUS_SUCCESS on success and failure status on failure
+ */
+QDF_STATUS hdd_set_nth_beacon_offload(hdd_adapter_t *adapter, uint16_t value)
+{
+	int ret;
+
+	ret = sme_cli_set_command(adapter->sessionId,
+				  WMI_VDEV_PARAM_NTH_BEACON_TO_HOST,
+				  value, VDEV_CMD);
+	if (ret) {
+		hdd_err("WMI_VDEV_PARAM_NTH_BEACON_TO_HOST %d", ret);
+		return QDF_STATUS_E_FAILURE;
+	}
+
+	return QDF_STATUS_SUCCESS;
+}
+#else
+QDF_STATUS hdd_set_nth_beacon_offload(hdd_adapter_t *adapter, uint16_t value)
+{
+	return QDF_STATUS_SUCCESS;
+}
+#endif
 
 /**
  * hdd_start_driver_ops_timer() - Starts driver ops inactivity timer
