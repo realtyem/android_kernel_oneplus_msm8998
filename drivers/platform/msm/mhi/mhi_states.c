@@ -18,7 +18,7 @@
 #include <linux/platform_device.h>
 #include <linux/pm_runtime.h>
 
-static const char * const mhi_states_transition_str[STATE_TRANSITION_MAX] = {
+static const char * mhi_states_transition_str[STATE_TRANSITION_MAX] = {
 	[STATE_TRANSITION_RESET] = "RESET",
 	[STATE_TRANSITION_READY] = "READY",
 	[STATE_TRANSITION_M0] = "M0",
@@ -149,7 +149,7 @@ void mhi_set_m_state(struct mhi_device_ctxt *mhi_dev_ctxt,
  * L3: LD_ERR_FATAL_DETECT <--> LD_ERR_FATAL_DETECT
  *     LD_ERR_FATAL_DETECT -> SHUTDOWN_PROCESS
  */
-static const struct mhi_pm_transitions const mhi_state_transitions[] = {
+static const struct mhi_pm_transitions mhi_state_transitions[] = {
 	/* L0 States */
 	{
 		MHI_PM_DISABLE,

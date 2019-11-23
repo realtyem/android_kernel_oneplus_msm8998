@@ -1124,13 +1124,13 @@ CSID_TG:
         if (!strcmp(slave_info->sensor_name,match_tbl[i].sensor_name))
             break;
     }
-    if (i >= count)
+    if (i >= count) {
         pr_err("%s,Match camera sensor faild!,current sensor name is %s",
             __func__,slave_info->sensor_name);
-    else
+    } else {
         push_component_info(CameraID,slave_info->sensor_name,
             match_tbl[i].vendor_name);
-
+    }
 	msm_sensor_fill_sensor_info(s_ctrl, probed_info, entity_name);
 
 	/*
