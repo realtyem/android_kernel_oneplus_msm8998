@@ -1878,9 +1878,9 @@ static int f2fs_ioc_shutdown(struct file *filp, unsigned long arg)
 		return -EFAULT;
 
 	if (in != F2FS_GOING_DOWN_FULLSYNC) {
-		ret = mnt_want_write_file(filp);
-		if (ret)
-			return ret;
+	ret = mnt_want_write_file(filp);
+	if (ret)
+		return ret;
 	}
 
 	switch (in) {
@@ -1923,7 +1923,7 @@ static int f2fs_ioc_shutdown(struct file *filp, unsigned long arg)
 	f2fs_update_time(sbi, REQ_TIME);
 out:
 	if (in != F2FS_GOING_DOWN_FULLSYNC)
-		mnt_drop_write_file(filp);
+	mnt_drop_write_file(filp);
 	return ret;
 }
 

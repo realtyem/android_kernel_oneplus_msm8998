@@ -233,7 +233,7 @@ static int do_read_inode(struct inode *inode)
 	inode->i_mtime.tv_nsec = le32_to_cpu(ri->i_mtime_nsec);
 	inode->i_generation = le32_to_cpu(ri->i_generation);
 	if (S_ISDIR(inode->i_mode))
-		fi->i_current_depth = le32_to_cpu(ri->i_current_depth);
+	fi->i_current_depth = le32_to_cpu(ri->i_current_depth);
 	else if (S_ISREG(inode->i_mode))
 		fi->i_gc_failures[GC_FAILURE_PIN] =
 					le16_to_cpu(ri->i_gc_failures);

@@ -537,7 +537,7 @@ static int _cpu_up(unsigned int cpu, int tasks_frozen)
 	if (ret) {
 		nr_calls--;
 		pr_warn_ratelimited("%s: attempt to bring up CPU %u failed\n",
-				    __func__, cpu);
+			__func__, cpu);
 		goto out_notify;
 	}
 

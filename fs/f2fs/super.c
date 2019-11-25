@@ -2848,7 +2848,7 @@ try_onemore:
 			f2fs_kmalloc(sbi,
 				     array_size(n,
 						sizeof(struct f2fs_bio_info)),
-				     GFP_KERNEL);
+					GFP_KERNEL);
 		if (!sbi->write_io[i]) {
 			err = -ENOMEM;
 			goto free_options;

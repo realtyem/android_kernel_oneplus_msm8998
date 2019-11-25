@@ -209,9 +209,9 @@ static void cpufreq_interactive_timer_resched(unsigned long cpu,
 		for_each_cpu(i, ppol->policy->cpus) {
 			pcpu = &per_cpu(cpuinfo, i);
 			pcpu->time_in_idle = get_cpu_idle_time(i,
-						&pcpu->time_in_idle_timestamp,
-						tunables->io_is_busy);
-			pcpu->cputime_speedadj = 0;
+				  &pcpu->time_in_idle_timestamp,
+				  tunables->io_is_busy);
+	pcpu->cputime_speedadj = 0;
 			pcpu->cputime_speedadj_timestamp =
 						pcpu->time_in_idle_timestamp;
 		}
@@ -256,11 +256,11 @@ static void cpufreq_interactive_timer_start(
 
 	for_each_cpu(i, ppol->policy->cpus) {
 		pcpu = &per_cpu(cpuinfo, i);
-		pcpu->time_in_idle =
+	pcpu->time_in_idle =
 			get_cpu_idle_time(i, &pcpu->time_in_idle_timestamp,
-					  tunables->io_is_busy);
-		pcpu->cputime_speedadj = 0;
-		pcpu->cputime_speedadj_timestamp = pcpu->time_in_idle_timestamp;
+				  tunables->io_is_busy);
+	pcpu->cputime_speedadj = 0;
+	pcpu->cputime_speedadj_timestamp = pcpu->time_in_idle_timestamp;
 	}
 	spin_unlock_irqrestore(&ppol->load_lock, flags);
 }
@@ -521,7 +521,7 @@ static void cpufreq_interactive_timer(unsigned long data)
 			now = update_load(cpu);
 			delta_time = (unsigned int)
 				(now - pcpu->cputime_speedadj_timestamp);
-			if (WARN_ON_ONCE(!delta_time))
+	if (WARN_ON_ONCE(!delta_time))
 				continue;
 			cputime_speedadj = pcpu->cputime_speedadj;
 			do_div(cputime_speedadj, delta_time);
@@ -572,7 +572,7 @@ static void cpufreq_interactive_timer(unsigned long data)
 		skip_min_sample_time = true;
 		if (!jump_to_max)
 			jump_to_max_no_ts = true;
-	}
+		}
 
 	new_freq = chosen_freq;
 	if (jump_to_max_no_ts || jump_to_max) {
@@ -581,7 +581,7 @@ static void cpufreq_interactive_timer(unsigned long data)
 		if (pol_load >= tunables->go_hispeed_load ||
 		    tunables->boosted) {
 			if (ppol->target_freq < tunables->hispeed_freq)
-				new_freq = tunables->hispeed_freq;
+			new_freq = tunables->hispeed_freq;
 			else
 				new_freq = max(new_freq,
 					       tunables->hispeed_freq);
@@ -691,11 +691,11 @@ rearm:
 		govinfo.sampling_rate_us = jiffies_to_usecs(tunables->timer_rate);
 		atomic_notifier_call_chain(&cpufreq_govinfo_notifier_list,
 					   CPUFREQ_LOAD_CHANGE, &govinfo);
-	}
+}
 
 exit:
 	up_read(&ppol->enable_sem);
-	return;
+		return;
 }
 
 static int cpufreq_interactive_speedchange_task(void *data)
@@ -871,7 +871,7 @@ static int cpufreq_interactive_notifier(
 		if (cpumask_first(ppol->policy->cpus) != freq->cpu) {
 			up_read(&ppol->enable_sem);
 			return 0;
-		}
+				}
 		spin_lock_irqsave(&ppol->load_lock, flags);
 		for_each_cpu(cpu, ppol->policy->cpus)
 			update_load(cpu);
@@ -1795,7 +1795,7 @@ static int cpufreq_governor_interactive(struct cpufreq_policy *policy,
 	case CPUFREQ_GOV_LIMITS:
 		ppol = per_cpu(polinfo, policy->cpu);
 
-		__cpufreq_driver_target(policy,
+			__cpufreq_driver_target(policy,
 				ppol->target_freq, CPUFREQ_RELATION_L);
 
 		down_read(&ppol->enable_sem);
@@ -1804,7 +1804,7 @@ static int cpufreq_governor_interactive(struct cpufreq_policy *policy,
 				cpufreq_interactive_timer_resched(policy->cpu,
 								  true);
 			ppol->min_freq = policy->min;
-		}
+			}
 		up_read(&ppol->enable_sem);
 
 		break;

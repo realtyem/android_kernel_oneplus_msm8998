@@ -1904,7 +1904,7 @@ static void update_sit_entry(struct f2fs_sb_info *sbi, block_t blkaddr, int del)
 	se->valid_blocks = new_vblocks;
 	se->mtime = get_mtime(sbi, false);
 	if (se->mtime > SIT_I(sbi)->max_mtime)
-		SIT_I(sbi)->max_mtime = se->mtime;
+	SIT_I(sbi)->max_mtime = se->mtime;
 
 	/* Update valid block bitmap */
 	if (del > 0) {
@@ -2870,7 +2870,7 @@ reallocate:
 		goto reallocate;
 	}
 
-	update_device_state(fio);
+		update_device_state(fio);
 
 	if (keep_order)
 		up_read(&fio->sbi->io_order_lock);
@@ -3847,7 +3847,7 @@ static int build_sit_entries(struct f2fs_sb_info *sbi)
 							se->valid_blocks;
 			get_sec_entry(sbi, start)->valid_blocks -=
 							old_valid_blocks;
-		}
+	}
 	}
 	up_read(&curseg->journal_rwsem);
 
