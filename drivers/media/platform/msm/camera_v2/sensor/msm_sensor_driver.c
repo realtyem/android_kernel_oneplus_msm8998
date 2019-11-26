@@ -768,7 +768,7 @@ int32_t msm_sensor_driver_probe(void *setting,
 	struct msm_camera_slave_info        *camera_info = NULL;
 /* chenneng@camera 20151117 add for product information */
 	uint32_t count = 0,i;
-	enum COMPONENT_TYPE CameraID;
+	enum COMPONENT_TYPE CameraID = 0;
 
 	unsigned long                        mount_pos = 0;
 	uint32_t                             is_yuv;

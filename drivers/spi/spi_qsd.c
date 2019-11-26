@@ -1315,7 +1315,7 @@ static u32 msm_spi_calc_spi_ioc_clk_polarity(u32 spi_ioc, u8 mode)
  */
 static u32 msm_spi_set_spi_io_control(struct msm_spi *dd)
 {
-	u32 spi_ioc, spi_ioc_orig, chip_select;
+	u32 spi_ioc = 0, spi_ioc_orig = 0, chip_select = 0;
 
 	spi_ioc = readl_relaxed(dd->base + SPI_IO_CONTROL);
 	spi_ioc_orig = spi_ioc;
@@ -1374,7 +1374,7 @@ static int msm_spi_process_transfer(struct msm_spi *dd)
 	u32 max_speed = 0;
 	u32 read_count;
 	u32 timeout;
-	u32 spi_ioc;
+	u32 spi_ioc = 0;
 	u32 int_loopback = 0;
 	int ret;
 	int status = 0;
@@ -1525,8 +1525,8 @@ static int msm_spi_slv_abort(struct spi_master *spi)
 static inline void msm_spi_set_cs(struct spi_device *spi, bool set_flag)
 {
 	struct msm_spi *dd = spi_master_get_devdata(spi->master);
-	u32 spi_ioc;
-	u32 spi_ioc_orig;
+	u32 spi_ioc = 0;
+	u32 spi_ioc_orig = 0;
 	int rc = 0;
 
 	rc = pm_runtime_get_sync(dd->dev);
@@ -1574,7 +1574,7 @@ static inline void msm_spi_set_cs(struct spi_device *spi, bool set_flag)
 
 static int reset_core(struct msm_spi *dd)
 {
-	u32 spi_ioc;
+	u32 spi_ioc = 0;
 	if (msm_spi_register_init(dd))
 		return -EIO;
 	/*
@@ -1842,7 +1842,7 @@ static int msm_spi_setup(struct spi_device *spi)
 {
 	struct msm_spi	*dd;
 	int              rc = 0;
-	u32              spi_ioc;
+	u32              spi_ioc = 0;
 	u32              spi_config;
 	u32              mask;
 

@@ -2884,7 +2884,7 @@ int smblib_set_prop_pd_voltage_max(struct smb_charger *chg,
 
 static int __smblib_set_prop_pd_active(struct smb_charger *chg, bool pd_active)
 {
-	int rc;
+	int rc = 0;
 	bool orientation, sink_attached, hvdcp;
 	u8 stat;
 
@@ -4013,7 +4013,7 @@ int op_rerun_apsd(struct smb_charger *chg)
 }
 static void smblib_handle_apsd_done(struct smb_charger *chg, bool rising)
 {
-	int temp_region, current_limit_ua;
+	int temp_region, current_limit_ua = 0;
 	const struct apsd_result *apsd_result;
 
 	if (!rising)
@@ -6082,7 +6082,7 @@ int op_get_charg_en(struct smb_charger *chg, int *chg_enabled)
 static void op_check_charger_collapse(struct smb_charger *chg)
 {
 	int rc, is_usb_supend, curr, chg_en;
-	u8 stat, chger_stat, pwer_source_stats;
+	u8 stat = 0, chger_stat = 0, pwer_source_stats = 0;
 
 	if (!chg->vbus_present)
 		return;
@@ -6559,7 +6559,7 @@ static int op_read(struct smb_charger *chg, u16 addr, u8 *val)
 
 int op_read_backup_flag(struct smb_charger *chg)
 {
-	u8 flag;
+	u8 flag = 0;
 	int rc = 0;
 
 	rc = op_read(chg, SOC_DATA_REG_0, &flag);
@@ -6601,7 +6601,7 @@ void op_write_backup_flag(struct smb_charger *chg, bool bk_flag)
 
 static int load_data(struct smb_charger *chg)
 {
-	u8 stored_soc = 0, flag;
+	u8 stored_soc = 0, flag = 0;
 	int rc = 0, shutdown_soc = 0;
 
 	if (!chg) {

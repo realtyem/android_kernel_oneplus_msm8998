@@ -515,9 +515,10 @@ static struct platform_driver msm_cpufreq_plat_driver = {
 
 static int get_c0_available_cpufreq(void)
 {
-	unsigned int max_cpufreq_index, min_cpufreq_index;
-	unsigned int max_index;
-	unsigned int index_max, index_min;
+	unsigned int max_cpufreq_index = (unsigned int)pm_qos_request(PM_QOS_C0_CPUFREQ_MAX);
+	unsigned int min_cpufreq_index = (unsigned int)pm_qos_request(PM_QOS_C0_CPUFREQ_MIN);
+	unsigned int max_index = 0;
+	unsigned int index_max = 0, index_min = 0;
 	struct cpufreq_frequency_table *table, *pos;
 
       	table = cpufreq_frequency_get_table(0);
@@ -526,8 +527,6 @@ static int get_c0_available_cpufreq(void)
 		return -EINVAL;
 	}
 
-        max_cpufreq_index = (unsigned int)pm_qos_request(PM_QOS_C0_CPUFREQ_MAX);
-        min_cpufreq_index = (unsigned int)pm_qos_request(PM_QOS_C0_CPUFREQ_MIN);
         /* you can limit the min cpufreq*/
         if (min_cpufreq_index > max_cpufreq_index)
                 max_cpufreq_index = min_cpufreq_index;
@@ -565,8 +564,8 @@ static int get_c0_available_cpufreq(void)
 static int get_c1_available_cpufreq(void)
 {
         unsigned int max_cpufreq_index, min_cpufreq_index;
-        unsigned int max_index;
-        unsigned int index_max, index_min;
+        unsigned int max_index = 0;
+        unsigned int index_max = 0, index_min = 0;
         struct cpufreq_frequency_table *table, *pos;
 
 	table = cpufreq_frequency_get_table(cluster1_first_cpu);

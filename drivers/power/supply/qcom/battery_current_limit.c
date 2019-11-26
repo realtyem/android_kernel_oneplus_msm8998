@@ -289,7 +289,7 @@ static void soc_mitigate(struct work_struct *work)
 	enum bcl_threshold_state prev_soc_state;
 	static struct power_supply *usb_psy;
 	int usb_state;
-	bool is_usb_present;
+	bool is_usb_present = false;
 
 	if (!usb_psy)
 		usb_psy = power_supply_get_by_name("usb");

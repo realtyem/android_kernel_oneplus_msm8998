@@ -190,8 +190,8 @@ static int devbw_get_dev_status(struct device *dev,
 
 static int devfreq_qos_handler(struct notifier_block *b, unsigned long val, void *v)
 {
-	unsigned int max_devfreq_index, min_devfreq_index;
-	unsigned int index_max, index_min;
+	unsigned int max_devfreq_index = 0, min_devfreq_index = 0;
+	unsigned int index_max = 0, index_min = 0;
 
 	max_devfreq_index = (unsigned int)pm_qos_request(PM_QOS_DEVFREQ_MAX);
 	min_devfreq_index = (unsigned int)pm_qos_request(PM_QOS_DEVFREQ_MIN);

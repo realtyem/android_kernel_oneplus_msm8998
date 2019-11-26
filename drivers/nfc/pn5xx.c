@@ -1184,7 +1184,7 @@ static int pn544_parse_dt(struct device *dev,
 static int pn544_probe(struct i2c_client *client,
         const struct i2c_device_id *id)
 {
-    int ret;
+    int ret = 0;
     struct pn544_i2c_platform_data *platform_data;
     //struct pn544_dev *pn544_dev;
 
