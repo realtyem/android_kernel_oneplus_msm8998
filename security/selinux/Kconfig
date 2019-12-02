@@ -131,3 +131,10 @@ config SECURITY_SELINUX_POLICYDB_VERSION_MAX_VALUE
 	  installed under /etc/selinux/$SELINUXTYPE/policy, where
 	  SELINUXTYPE is defined in your /etc/selinux/config.
 
+config SELINUX_FAKE_ENFORCING
+	bool "Fake enforcement of SELinux policies"
+	depends on SECURITY_SELINUX_DEVELOP
+	default true
+	help
+	  Use this if you are tired of using setenforce 0 on a command line
+	  but need it to look like it's working so Android won't whine.
