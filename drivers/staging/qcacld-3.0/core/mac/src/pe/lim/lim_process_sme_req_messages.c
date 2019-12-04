@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2018 The Linux Foundation. All rights reserved.
+ * Copyright (c) 2012-2019 The Linux Foundation. All rights reserved.
  *
  * Permission to use, copy, modify, and/or distribute this software for
  * any purpose with or without fee is hereby granted, provided that the
@@ -2959,6 +2959,9 @@ __lim_process_sme_set_context_req(tpAniSirGlobal mac_ctx, uint32_t *msg_buf)
 	}
 	qdf_mem_copy(set_context_req, msg_buf,
 			sizeof(struct sSirSmeSetContextReq));
+
+	qdf_mem_zero(msg_buf, sizeof(tSirSmeSetContextReq));
+
 	sme_session_id = set_context_req->sessionId;
 	sme_transaction_id = set_context_req->transactionId;
 
@@ -3066,6 +3069,7 @@ __lim_process_sme_set_context_req(tpAniSirGlobal mac_ctx, uint32_t *msg_buf)
 				sme_transaction_id);
 	}
 end:
+	qdf_mem_zero(set_context_req, sizeof(tSirSmeSetContextReq));
 	qdf_mem_free(set_context_req);
 	return;
 }
@@ -4137,6 +4141,7 @@ static void __lim_process_roam_scan_offload_req(tpAniSirGlobal mac_ctx,
 	local_ie_buf = qdf_mem_malloc(MAX_DEFAULT_SCAN_IE_LEN);
 	if (!local_ie_buf) {
 		pe_err("Mem Alloc failed for local_ie_buf");
+		qdf_mem_zero(req_buffer, sizeof(tSirRoamOffloadScanReq));
 		qdf_mem_free(req_buffer);
 		return;
 	}
@@ -4164,6 +4169,7 @@ static void __lim_process_roam_scan_offload_req(tpAniSirGlobal mac_ctx,
 	status = wma_post_ctrl_msg(mac_ctx, &wma_msg);
 	if (eSIR_SUCCESS != status) {
 		pe_err("Posting WMA_ROAM_SCAN_OFFLOAD_REQ failed");
+		qdf_mem_zero(req_buffer, sizeof(tSirRoamOffloadScanReq));
 		qdf_mem_free(req_buffer);
 	}
 }
@@ -6005,6 +6011,8 @@ void lim_send_chan_switch_action_frame(tpAniSirGlobal mac_ctx,
 
 }
 
+#define MAX_WAKELOCK_FOR_CSA         5000
+
 /**
  * lim_process_sme_dfs_csa_ie_request() - process sme dfs csa ie req
  *
@@ -6124,6 +6132,9 @@ static void lim_process_sme_dfs_csa_ie_request(tpAniSirGlobal mac_ctx,
 		dfs_csa_ie_req->ch_params.center_freq_seg0;
 skip_vht:
 	/* Send CSA IE request from here */
+	qdf_wake_lock_timeout_acquire(&session_entry->ap_ecsa_wakelock,
+				      MAX_WAKELOCK_FOR_CSA);
+	qdf_runtime_pm_prevent_suspend(&session_entry->ap_ecsa_runtime_lock);
 	lim_send_dfs_chan_sw_ie_update(mac_ctx, session_entry);
 
 	if (dfs_csa_ie_req->ch_params.ch_width == CH_WIDTH_80MHZ)
