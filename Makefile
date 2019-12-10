@@ -303,7 +303,7 @@ CONFIG_SHELL := $(shell if [ -x "$$BASH" ]; then echo $$BASH; \
 
 HOSTCC       = gcc
 HOSTCXX      = g++
-HOSTCFLAGS   := -Wall -Wmissing-prototypes -Wstrict-prototypes -O3 -fomit-frame-pointer -std=gnu89
+HOSTCFLAGS   := -Wall -Wmissing-prototypes -Wstrict-prototypes -O3 -fomit-frame-pointer -std=gnu89 -pipe
 HOSTCXXFLAGS = -O3
 
 # Decide whether to build built-in, modular, or both.
@@ -397,7 +397,18 @@ KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -fno-strict-aliasing -fno-common \
 		   -Werror-implicit-function-declaration \
 		   -Wno-format-security \
-		   -std=gnu89 $(call cc-option,-fno-PIE)
+		   -std=gnu89 $(call cc-option,-fno-PIE) -pipe \
+		   -mcpu=cortex-a73.cortex-a53 -mtune=cortex-a73.cortex-a53 \
+		   -fdiagnostics-color=always -ftree-vectorize \
+#		   -Wno-memset-transposed-args -Wno-bool-compare \
+#		   -Wno-discarded-array-qualifiers -Wno-unused-const-variable \
+#		   -Wno-incompatible-pointer-types -Wno-misleading-indentation \
+#		   -Wno-tautological-compare -Wno-error=misleading-indentation \
+#		   -Wno-format-truncation -Wno-memset-elt-size \
+#		   -Wno-bool-operation -Wno-int-in-bool-context -Wno-parentheses \
+#		   -Wno-switch-unreachable -Wno-stringop-overflow -Wno-format-overflow
+#		   -fno-store-merging
+
 
 # TODO: remove me b/62057517
 KBUILD_CFLAGS += \
