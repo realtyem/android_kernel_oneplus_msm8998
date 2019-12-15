@@ -250,13 +250,13 @@ if DSBOOST
 
 config INPUT_BOOST_DURATION
 	int "Input boost duration"
-	default "64"
+	default "500"
 	help
 	  Default duration to boost on input.
 
 config INPUT_STUNE_BOOST
 	int "Input SchedTune boost level"
-	default "15"
+	default "20"
 	help
 	  Default SchedTune boost level for the top-app cgroup.
 
