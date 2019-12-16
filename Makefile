@@ -673,6 +673,7 @@ KBUILD_CFLAGS	+= -march=armv8-a+crc+crypto -mcpu=cortex-a73.cortex-a53+crc+crypt
 endif
 
 #		   -mcpu=cortex-a73.cortex-a53 -mtune=cortex-a73.cortex-a53 \
+
 ifdef CONFIG_CC_WERROR
 KBUILD_CFLAGS	+= -Werror
 endif
