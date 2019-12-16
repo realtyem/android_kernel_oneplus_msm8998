@@ -398,7 +398,6 @@ KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -Werror-implicit-function-declaration \
 		   -Wno-format-security \
 		   -std=gnu89 $(call cc-option,-fno-PIE) -pipe \
-		   -mcpu=cortex-a73.cortex-a53 -mtune=cortex-a73.cortex-a53 \
 		   -fdiagnostics-color=always -ftree-vectorize \
 		   -Wno-array-bounds
 #		   -Wno-memset-transposed-args -Wno-bool-compare \
@@ -669,6 +668,11 @@ else
 KBUILD_CFLAGS   += -O3
 endif
 
+ifeq ($(cc-name),gcc)
+KBUILD_CFLAGS	+= -march=armv8-a+crc+crypto -mcpu=cortex-a73.cortex-a53+crc+crypto -mtune=cortex-a73.cortex-a53
+endif
+
+#		   -mcpu=cortex-a73.cortex-a53 -mtune=cortex-a73.cortex-a53 \
 ifdef CONFIG_CC_WERROR
 KBUILD_CFLAGS	+= -Werror
 endif
