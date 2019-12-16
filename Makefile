@@ -400,6 +400,7 @@ KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -std=gnu89 $(call cc-option,-fno-PIE) -pipe \
 		   -mcpu=cortex-a73.cortex-a53 -mtune=cortex-a73.cortex-a53 \
 		   -fdiagnostics-color=always -ftree-vectorize \
+		   -Wno-array-bounds
 #		   -Wno-memset-transposed-args -Wno-bool-compare \
 #		   -Wno-discarded-array-qualifiers -Wno-unused-const-variable \
 #		   -Wno-incompatible-pointer-types -Wno-misleading-indentation \
