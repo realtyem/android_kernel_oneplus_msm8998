@@ -87,8 +87,8 @@ static int qpnp_write_wrapper(struct qpnp_rtc *rtc_dd, u8 *rtc_val,
 	int rc;
 	if (base == (rtc_dd->alarm_base + REG_OFFSET_ALARM_CTRL1)) {
 			dev_err(rtc_dd->rtc_dev, "write ALARM_CTRL1=0x%x\n", *rtc_val);
-			if (!(*rtc_val & BIT_RTC_ALARM_ENABLE))
-				dump_stack();
+/*			if (!(*rtc_val & BIT_RTC_ALARM_ENABLE))
+				dump_stack(); */
 		}
 
 	rc = regmap_bulk_write(rtc_dd->regmap, base, rtc_val, count);
