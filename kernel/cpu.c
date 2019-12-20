@@ -98,7 +98,7 @@ void cpu_hotplug_mutex_held(void)
 }
 EXPORT_SYMBOL(cpu_hotplug_mutex_held);
 
-void get_online_cpus(void)
+void cpus_read_lock(void)
 {
 	might_sleep();
 	if (cpu_hotplug.active_writer == current)
@@ -108,9 +108,9 @@ void get_online_cpus(void)
 	atomic_inc(&cpu_hotplug.refcount);
 	mutex_unlock(&cpu_hotplug.lock);
 }
-EXPORT_SYMBOL_GPL(get_online_cpus);
+EXPORT_SYMBOL_GPL(cpus_read_lock);
 
-void put_online_cpus(void)
+void cpus_read_unlock(void)
 {
 	int refcount;
 
@@ -127,7 +127,7 @@ void put_online_cpus(void)
 	cpuhp_lock_release();
 
 }
-EXPORT_SYMBOL_GPL(put_online_cpus);
+EXPORT_SYMBOL_GPL(cpus_read_unlock);
 
 /*
  * This ensures that the hotplug operation can begin only when the
@@ -151,7 +151,7 @@ EXPORT_SYMBOL_GPL(put_online_cpus);
  * get_online_cpus() not an api which is called all that often.
  *
  */
-void cpu_hotplug_begin(void)
+void cpus_write_lock(void)
 {
 	DEFINE_WAIT(wait);
 
@@ -169,7 +169,7 @@ void cpu_hotplug_begin(void)
 	finish_wait(&cpu_hotplug.wq, &wait);
 }
 
-void cpu_hotplug_done(void)
+void cpus_write_unlock(void)
 {
 	cpu_hotplug.active_writer = NULL;
 	mutex_unlock(&cpu_hotplug.lock);
@@ -376,7 +376,7 @@ static int _cpu_down(unsigned int cpu, int tasks_frozen)
 	if (!tasks_frozen && !cpu_isolated(cpu) && num_online_uniso_cpus() == 1)
 		return -EBUSY;
 
-	cpu_hotplug_begin();
+	cpus_write_lock();
 
 	err = __cpu_notify(CPU_DOWN_PREPARE | mod, hcpu, -1, &nr_calls);
 	if (err) {
@@ -448,7 +448,7 @@ static int _cpu_down(unsigned int cpu, int tasks_frozen)
 	check_for_tasks(cpu);
 
 out_release:
-	cpu_hotplug_done();
+	cpus_write_unlock();
 	trace_sched_cpu_hotplug(cpu, err, 0);
 	if (!err)
 		cpu_notify_nofail(CPU_POST_DEAD | mod, hcpu);
@@ -524,7 +524,7 @@ static int _cpu_up(unsigned int cpu, int tasks_frozen)
 	unsigned long mod = tasks_frozen ? CPU_TASKS_FROZEN : 0;
 	struct task_struct *idle;
 
-	cpu_hotplug_begin();
+	cpus_write_lock();
 
 	if (cpu_online(cpu) || !cpu_present(cpu)) {
 		ret = -EINVAL;
@@ -563,7 +563,7 @@ out_notify:
 	if (ret != 0)
 		__cpu_notify(CPU_UP_CANCELED | mod, hcpu, nr_calls, NULL);
 out:
-	cpu_hotplug_done();
+	cpus_write_unlock();
 	arch_smt_update();
 	trace_sched_cpu_hotplug(cpu, ret, 1);
 
