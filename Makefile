@@ -761,8 +761,6 @@ endif
 endif
 KBUILD_CFLAGS += $(stackp-flag)
 
-endif
-
 ifdef CONFIG_FRAME_POINTER
 KBUILD_CFLAGS	+= -fno-omit-frame-pointer -fno-optimize-sibling-calls
 else
