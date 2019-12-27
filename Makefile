@@ -399,14 +399,23 @@ KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -Wno-format-security \
 		   -std=gnu89 $(call cc-option,-fno-PIE) -pipe \
 		   -fdiagnostics-color=always -ftree-vectorize \
-		   -Wno-array-bounds
-#		   -Wno-memset-transposed-args -Wno-bool-compare \
-#		   -Wno-discarded-array-qualifiers -Wno-unused-const-variable \
-#		   -Wno-incompatible-pointer-types -Wno-misleading-indentation \
-#		   -Wno-tautological-compare -Wno-error=misleading-indentation \
-#		   -Wno-format-truncation -Wno-memset-elt-size \
-#		   -Wno-bool-operation -Wno-int-in-bool-context -Wno-parentheses \
-#		   -Wno-switch-unreachable -Wno-stringop-overflow -Wno-format-overflow
+		   -Wno-array-bounds -Wno-psabi
+#		   -Wno-memset-transposed-args \
+#		   -Wno-bool-compare \
+#		   -Wno-discarded-array-qualifiers \
+#		   -Wno-unused-const-variable \
+#		   -Wno-incompatible-pointer-types \
+#		   -Wno-misleading-indentation \
+#		   -Wno-tautological-compare \
+#		   -Wno-error=misleading-indentation \
+#		   -Wno-format-truncation \
+#		   -Wno-memset-elt-size \
+#		   -Wno-bool-operation \
+#		   -Wno-int-in-bool-context \
+#		   -Wno-parentheses \
+#		   -Wno-switch-unreachable \
+#		   -Wno-stringop-overflow \
+#		   -Wno-format-overflow \
 #		   -fno-store-merging
 
 
