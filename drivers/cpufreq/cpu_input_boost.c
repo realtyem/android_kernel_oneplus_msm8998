@@ -47,8 +47,6 @@ struct boost_drv {
 	struct notifier_block cpu_notif;
 	struct notifier_block fb_notif;
 	wait_queue_head_t boost_waitq;
-	unsigned long input_boost_jifs;
-	unsigned long wake_boost_jifs;
 	atomic64_t max_boost_expires;
 	atomic_t state;
 };
@@ -118,7 +116,7 @@ static void __cpu_input_boost_kick(struct boost_drv *b)
 	set_boost_bit(b, INPUT_BOOST);
 	wake_up(&b->boost_waitq);
 	mod_delayed_work(system_unbound_wq, &b->input_unboost,
-			 b->input_boost_jifs);
+			 msecs_to_jiffies(input_boost_duration));
 }
 
 void cpu_input_boost_kick(void)
@@ -134,7 +132,7 @@ void cpu_input_boost_kick(void)
 static void __cpu_input_boost_kick_max(struct boost_drv *b,
 				       unsigned int duration_ms)
 {
-	unsigned long boost_jifs = msecs_to_jiffies(duration_ms);
+	unsigned long boost_jiffies = msecs_to_jiffies(duration_ms);
 	unsigned long curr_expires, new_expires;
 
 	if (get_boost_state(b) & SCREEN_OFF)
@@ -142,7 +140,7 @@ static void __cpu_input_boost_kick_max(struct boost_drv *b,
 
 	do {
 		curr_expires = atomic64_read(&b->max_boost_expires);
-		new_expires = jiffies + boost_jifs;
+		new_expires = jiffies + boost_jiffies;
 
 		/* Skip this boost if there's a longer boost in effect */
 		if (time_after(curr_expires, new_expires))
@@ -152,7 +150,7 @@ static void __cpu_input_boost_kick_max(struct boost_drv *b,
 
 	set_boost_bit(b, MAX_BOOST);
 	wake_up(&b->boost_waitq);
-	mod_delayed_work(system_unbound_wq, &b->max_unboost, boost_jifs);
+	mod_delayed_work(system_unbound_wq, &b->max_unboost, boost_jiffies);
 }
 
 void cpu_input_boost_kick_max(unsigned int duration_ms)
@@ -369,8 +367,6 @@ static int __init cpu_input_boost_init(void)
 	INIT_DELAYED_WORK(&b->input_unboost, input_unboost_worker);
 	INIT_DELAYED_WORK(&b->max_unboost, max_unboost_worker);
 	init_waitqueue_head(&b->boost_waitq);
-	b->input_boost_jifs = msecs_to_jiffies(input_boost_duration);
-	b->wake_boost_jifs = msecs_to_jiffies(CONFIG_WAKE_BOOST_DURATION_MS);
 	atomic64_set(&b->max_boost_expires, 0);
 	atomic_set(&b->state, !SCREEN_OFF);
 
