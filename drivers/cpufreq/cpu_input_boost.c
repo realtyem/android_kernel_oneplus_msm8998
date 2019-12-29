@@ -14,13 +14,27 @@
 #include <linux/kthread.h>
 #include "../../kernel/sched/sched.h"
 
-static unsigned int input_boost_freq_lp = CONFIG_INPUT_BOOST_FREQ_LP;
-static unsigned int input_boost_freq_hp = CONFIG_INPUT_BOOST_FREQ_PERF;
-static unsigned short input_boost_duration = CONFIG_INPUT_BOOST_DURATION_MS;
+static unsigned int input_boost_freq_lp __read_mostly =
+	CONFIG_INPUT_BOOST_FREQ_LP;
+static unsigned int input_boost_freq_hp __read_mostly =
+	CONFIG_INPUT_BOOST_FREQ_PERF;
+static unsigned int max_boost_freq_lp __read_mostly =
+	CONFIG_MAX_BOOST_FREQ_LP;
+static unsigned int max_boost_freq_hp __read_mostly =
+	CONFIG_MAX_BOOST_FREQ_PERF;
+
+static unsigned short input_boost_duration __read_mostly =
+	CONFIG_INPUT_BOOST_DURATION_MS;
+static unsigned short wake_boost_duration __read_mostly =
+	CONFIG_WAKE_BOOST_DURATION_MS;
 
 module_param(input_boost_freq_lp, uint, 0644);
 module_param(input_boost_freq_hp, uint, 0644);
+module_param(max_boost_freq_lp, uint, 0644);
+module_param(max_boost_freq_hp, uint, 0644);
+
 module_param(input_boost_duration, short, 0644);
+module_param(wake_boost_duration, short, 0644);
 
 /* Available bits for boost state */
 #define SCREEN_OFF		BIT(0)
@@ -46,9 +60,9 @@ static u32 get_input_boost_freq(struct cpufreq_policy *policy)
 	u32 freq;
 
 	if (cpumask_test_cpu(policy->cpu, cpu_lp_mask))
-		freq = CONFIG_INPUT_BOOST_FREQ_LP;
+		freq = input_boost_freq_lp;
 	else
-		freq = CONFIG_INPUT_BOOST_FREQ_PERF;
+		freq = input_boost_freq_hp;
 
 	return min(freq, policy->max);
 }
@@ -58,9 +72,9 @@ static u32 get_max_boost_freq(struct cpufreq_policy *policy)
 	u32 freq;
 
 	if (cpumask_test_cpu(policy->cpu, cpu_lp_mask))
-		freq = CONFIG_MAX_BOOST_FREQ_LP;
+		freq = max_boost_freq_lp;
 	else
-		freq = CONFIG_MAX_BOOST_FREQ_PERF;
+		freq = max_boost_freq_hp;
 
 	return min(freq, policy->max);
 }
@@ -96,6 +110,9 @@ static void update_online_cpu_policy(void)
 static void __cpu_input_boost_kick(struct boost_drv *b)
 {
 	if (get_boost_state(b) & SCREEN_OFF)
+		return;
+
+	if (!input_boost_duration)
 		return;
 
 	set_boost_bit(b, INPUT_BOOST);
@@ -240,7 +257,7 @@ static int fb_notifier_cb(struct notifier_block *nb,
 	/* Boost when the screen turns on and unboost when it turns off */
 	if (*blank == FB_BLANK_UNBLANK) {
 		clear_boost_bit(b, SCREEN_OFF);
-		__cpu_input_boost_kick_max(b, CONFIG_WAKE_BOOST_DURATION_MS);
+		__cpu_input_boost_kick_max(b, wake_boost_duration);
 	} else {
 		set_boost_bit(b, SCREEN_OFF);
 		wake_up(&b->boost_waitq);
@@ -352,7 +369,7 @@ static int __init cpu_input_boost_init(void)
 	INIT_DELAYED_WORK(&b->input_unboost, input_unboost_worker);
 	INIT_DELAYED_WORK(&b->max_unboost, max_unboost_worker);
 	init_waitqueue_head(&b->boost_waitq);
-	b->input_boost_jifs = msecs_to_jiffies(CONFIG_INPUT_BOOST_DURATION_MS);
+	b->input_boost_jifs = msecs_to_jiffies(input_boost_duration);
 	b->wake_boost_jifs = msecs_to_jiffies(CONFIG_WAKE_BOOST_DURATION_MS);
 	atomic64_set(&b->max_boost_expires, 0);
 	atomic_set(&b->state, !SCREEN_OFF);
