@@ -642,6 +642,7 @@ static struct slim_driver msm_dai_slim_driver = {
 	.driver = {
 		.name = SLIM_DEV_NAME,
 		.owner = THIS_MODULE,
+		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
 	},
 	.probe = msm_dai_slim_dev_probe,
 	.remove = msm_dai_slim_dev_remove,

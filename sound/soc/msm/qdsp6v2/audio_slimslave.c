@@ -152,6 +152,7 @@ static struct slim_driver audio_slimslave_driver = {
 	.driver = {
 		.name = "audio-slimslave",
 		.owner = THIS_MODULE,
+		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
 	},
 	.probe = audio_slimslave_probe,
 	.remove = audio_slimslave_remove,

@@ -2428,6 +2428,7 @@ static struct platform_driver msm_lsm_driver = {
 		.name = "msm-lsm-client",
 		.owner = THIS_MODULE,
 		.of_match_table = of_match_ptr(msm_lsm_client_dt_match),
+		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
 	},
 	.probe = msm_lsm_probe,
 	.remove = msm_lsm_remove,

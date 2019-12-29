@@ -310,6 +310,7 @@ static struct platform_driver msm_dai_stub_dev = {
 		.name = "msm-dai-stub-dev",
 		.owner = THIS_MODULE,
 		.of_match_table = msm_dai_stub_dev_dt_match,
+		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
 	},
 };
 
@@ -351,6 +352,7 @@ static struct platform_driver msm_dai_stub_driver = {
 		.name = "msm-dai-stub",
 		.owner = THIS_MODULE,
 		.of_match_table = msm_dai_stub_dt_match,
+		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
 	},
 };
 

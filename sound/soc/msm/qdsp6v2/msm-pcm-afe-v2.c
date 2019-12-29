@@ -901,6 +901,7 @@ static struct platform_driver msm_afe_driver = {
 		.name = "msm-pcm-afe",
 		.owner = THIS_MODULE,
 		.of_match_table = msm_pcm_afe_dt_match,
+		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
 	},
 	.probe = msm_afe_probe,
 	.remove = msm_afe_remove,
