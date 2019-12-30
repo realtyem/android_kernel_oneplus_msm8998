@@ -323,15 +323,11 @@ static void cpu_input_boost_input_event(struct input_handle *handle,
 {
 	struct boost_drv *b = handle->handler->private;
 
-	if (code == KEY_POWER && value == 1) {
-		if (get_boost_state(b) & SCREEN_OFF) {
-			pr_info("power-key boost\n");
-			__cpu_input_boost_kick_max(b, 1000);
-		}
-		return;
-	}
-
 	__cpu_input_boost_kick(b);
+
+	if (type == EV_KEY && code == KEY_POWER && value == 1 &&
+	    !(get_boost_state(b) & SCREEN_OFF))
+		__cpu_input_boost_kick_wake(b);
 
 	b->last_input_jiffies = jiffies;
 }
