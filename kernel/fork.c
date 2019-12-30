@@ -79,6 +79,8 @@
 #include <linux/sysctl.h>
 #include <linux/kcov.h>
 #include <linux/cpufreq.h>
+#include <linux/cpu_input_boost.h>
+#include <linux/devfreq_boost.h>
 
 #include <asm/pgtable.h>
 #include <asm/pgalloc.h>
@@ -1792,6 +1794,14 @@ long _do_fork(unsigned long clone_flags,
 	int trace = 0;
 	long nr;
 
+	if (task_is_zygote(current) && cpu_input_boost_within_input(75)) {
+#ifdef CONFIG_CPU_INPUT_BOOST
+		cpu_input_boost_kick_max(32);
+#endif
+#ifdef CONFIG_DEVFREQ_BOOST
+		devfreq_boost_kick_max(DEVFREQ_MSM_CPUBW, 32);
+#endif
+	}
 	/*
 	 * Determine whether and which event to report to ptracer.  When
 	 * called from kernel_thread or CLONE_UNTRACED is explicitly
